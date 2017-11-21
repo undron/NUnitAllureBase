@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\..\.nuget\packages\allure.commons\2.2.0.7\contentFiles\any\netstandard2.0\allureConfig.json" Link="allureConfig.json">
+      <Private>False</Private>
+      <NuGetPackageVersion>2.2.0.7</NuGetPackageVersion>
+      <NuGetItemType>None</NuGetItemType>
+      <NuGetPackageId>Allure.Commons</NuGetPackageId>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
+    <PackageReference Include="NUnit" Version="3.9.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NUnitAllureBase\NUnitAllureBase.csproj" />
+  </ItemGroup>
+
+</Project>
