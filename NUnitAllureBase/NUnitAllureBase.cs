@@ -1,22 +1,31 @@
 ﻿using Allure.Commons;
+using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace NUnitAllure
 {
     public partial class NUnitAllureBase
     {
         private static AllureLifecycle Allure => AllureLifecycle.Instance;
-        private List<string> caseIds = new List<string>();
+        //private List<string> caseIds = new List<string>();
+
+        //Need for run via VS
+        static NUnitAllureBase()
+        {
+            Directory.SetCurrentDirectory(TestContext.CurrentContext.WorkDirectory);
+            TestContext.Progress.WriteLine($"Writing Allure results to {Allure.ResultsDirectory}");
+        }
 
         //[OneTimeSetUp]
-        protected void AllureBeforeAllTestsInClass()
+        public void AllureBeforeAllTestsInClass()
         {
-            //TestContext.Progress.WriteLine($"Writing results to {Allure.ResultsDirectory}");
             var nunitFixture = TestExecutionContext.CurrentContext.CurrentTest;
 
             var fixture = new TestResultContainer
@@ -28,59 +37,67 @@ namespace NUnitAllure
         }
 
         //[OneTimeTearDown]
-        protected void AllureAfterAllTestsInClass()
+        public void AllureAfterAllTestsInClass()
         {
+            AddMissedTests();
+
             var nunitFixture = TestExecutionContext.CurrentContext.CurrentTest;
-            var casesShouldBeRunned = TestExecutionContext.CurrentContext.CurrentResult.Children.Select(r => r.Test.Id).Where(id => !caseIds.Contains(id));
-            if (casesShouldBeRunned.Any())
-                AddMissedCases(casesShouldBeRunned);
+            //var casesShouldBeRunned = TestExecutionContext.CurrentContext.CurrentResult.Children.Select(r => r.Test.Id).Where(id => !caseIds.Contains(id));
+            //if (casesShouldBeRunned.Any())
+            //    AddMissedCases(casesShouldBeRunned);
 
             Allure.StopTestContainer(nunitFixture.Id);
             Allure.WriteTestContainer(nunitFixture.Id);
         }
 
-        private void AddMissedCases(IEnumerable<string> missedCaseIds)
+        private void AddMissedTests()
         {
-            var results = TestExecutionContext.CurrentContext.CurrentResult.Children;
-
-            foreach (var id in missedCaseIds)
+            var nunitFixtureResult = TestExecutionContext.CurrentContext.CurrentResult;
+            if (nunitFixtureResult.ResultState.Site == FailureSite.SetUp)
             {
-                var result = results.First(r => r.Test.Id == id);
-
-                var testResult = new Allure.Commons.TestResult
+                var failedTestResults = nunitFixtureResult.Children.Where(r => r is TestCaseResult);
+                foreach (var testResult in failedTestResults)
                 {
-                    uuid = id,
-                    historyId = result.Test.FullName,
-                    name = result.Test.MethodName,
-                    fullName = result.Test.FullName,
-                    labels = new List<Label>
+                    AddMissedTest(testResult);
+                }
+            }
+        }
+
+        private void AddMissedTest(ITestResult result)
+        {
+            var testResult = new Allure.Commons.TestResult
+            {
+                uuid = result.Test.Id,
+                historyId = result.Test.FullName,
+                name = result.Test.MethodName,
+                fullName = result.Test.FullName,
+                labels = new List<Label>
                     {
                         Label.Suite(result.Test.ClassName),
                         Label.Thread(),
                         Label.Host(),
                         Label.TestClass(result.Test.ClassName),
                         Label.TestMethod(result.Test.MethodName),
-                        Label.Package(result.Test.Fixture?.ToString() ?? result.Test.Parent.Fixture.ToString())
+                        Label.Package(result.Test.Fixture?.ToString() ?? result.Test.ClassName)
                     },
-                    status = GetNunitStatus(result.ResultState),
-                    statusDetails = new StatusDetails
-                    {
-                        message = result.Message,
-                        trace = result.StackTrace
-                    }
-                };
+                status = GetNunitStatus(result.ResultState),
+                statusDetails = new StatusDetails
+                {
+                    message = result.Message,
+                    trace = result.StackTrace
+                }
+            };
 
-                Allure.StartTestCase(testResult);
-                Allure.StopTestCase(id);
-                Allure.WriteTestCase(id);
-            }
+            Allure.StartTestCase(testResult);
+            Allure.StopTestCase(result.Test.Id);
+            Allure.WriteTestCase(result.Test.Id);
         }
 
         //[SetUp]
-        protected void AllureBeforeTest()
+        public void AllureBeforeTest()
         {
             var nunitTest = TestExecutionContext.CurrentContext.CurrentTest;
-            SaveCaseId(nunitTest.Id);
+            //SaveCaseId(nunitTest.Id);
 
             var testResult = new Allure.Commons.TestResult
             {
@@ -95,23 +112,23 @@ namespace NUnitAllure
                         Label.Host(),
                         Label.TestClass(nunitTest.ClassName),
                         Label.TestMethod(nunitTest.MethodName),
-                        Label.Package(nunitTest.Fixture.ToString())
+                        Label.Package(nunitTest.Fixture.ToString().Replace('+', '.'))
                     }
             };
 
             Allure.StartTestCase(testResult);
         }
 
-        private void SaveCaseId(string caseId)
-        {
-            lock (caseIds)
-            {
-                caseIds.Add(caseId);
-            }
-        }
+        //private void SaveCaseId(string caseId)
+        //{
+        //    lock (caseIds)
+        //    {
+        //        caseIds.Add(caseId);
+        //    }
+        //}
 
         //[TearDown]
-        protected void AllureAfterTest()
+        public void AllureAfterTest()
         {
             var nunitTest = TestExecutionContext.CurrentContext.CurrentTest;
 
@@ -126,7 +143,7 @@ namespace NUnitAllure
                 x.status = GetNunitStatus(TestContext.CurrentContext.Result.Outcome);
                 x.attachments.AddRange(AllureHelper.GetAttaches());
             });
-            
+
             Allure.StopTestCase(nunitTest.Id);
             Allure.WriteTestCase(nunitTest.Id);
         }
@@ -164,7 +181,7 @@ namespace NUnitAllure
             switch (result.Status)
             {
                 case TestStatus.Inconclusive:
-                    return Status.broken;
+                    return Status.none;
                 case TestStatus.Skipped:
                     return Status.skipped;
                 case TestStatus.Passed:

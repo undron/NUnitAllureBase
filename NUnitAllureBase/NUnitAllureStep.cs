@@ -87,6 +87,8 @@ namespace NUnitAllure
                 return Status.passed;
             if (e is IgnoreException)
                 return Status.skipped;
+            if (e is InconclusiveException)
+                return Status.none;
             if (e.GetType().ToString().Contains("Assert"))
                 return Status.failed;
 

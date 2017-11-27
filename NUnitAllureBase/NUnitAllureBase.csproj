@@ -3,6 +3,12 @@
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.0;netstandard2.0;net461</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.2</Version>
+    <Company />
+    <Product />
+    <Authors>Andrey Hurankou</Authors>
+    <RepositoryUrl>https://github.com/undron/NUnitAllureBase</RepositoryUrl>
+    <Description>Base Class for Allure 2 report</Description>
   </PropertyGroup>
 
   <ItemGroup>

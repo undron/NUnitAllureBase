@@ -113,5 +113,51 @@ namespace NUnitAllureBaseTests
                 TestContext.WriteLine("This goes to no step 3");
             }
         }
+
+        public class TestClass2 : ABase
+        {
+            [OneTimeSetUp]
+            public void OneTime()
+            {
+                AllureHelper.AttachText("This is one time setup text", "Some text in one time setup");
+            }
+
+            [Test]
+            public void Test9AttachInOneTimeSetup()
+            {
+                Step("Step 1", () =>
+                {
+                    AllureHelper.AttachText("This is step", "Some text in step");
+                });
+            }
+        }
+
+        public class TestClass3 : ABase
+        {
+            [OneTimeSetUp]
+            public void FailingOneTimeSetup()
+            {
+                throw new Exception("This error should apper in tests");
+            }
+
+            [Test]
+            public void Test10_1()
+            {
+
+            }
+
+            [Test]
+            public void Test10_2()
+            {
+
+            }
+
+            [Test]
+            public void Test10_3()
+            {
+
+            }
+
+        }
     }
 }

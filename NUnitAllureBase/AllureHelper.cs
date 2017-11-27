@@ -16,11 +16,11 @@ namespace NUnitAllure
 
         public static void AttachJson(string name, string json) => MakeTextAttach(name, json, "application/json");
 
-        public static void AttachXml (string name, string xml) => MakeTextAttach(name, xml, "text/xml");
+        public static void AttachXml(string name, string xml) => MakeTextAttach(name, xml, "text/xml");
 
-        public static void AttachHtml (string name, string html) => MakeTextAttach(name, html, "text/html");
+        public static void AttachHtml(string name, string html) => MakeTextAttach(name, html, "text/html");
 
-        public static void AttachPng (string name, byte[] pngData) => MakeBinaryAttach(name, pngData, "image/png");
+        public static void AttachPng(string name, byte[] pngData) => MakeBinaryAttach(name, pngData, "image/png");
 
         private static void MakeTextAttach(string name, string context, string type)
         {
