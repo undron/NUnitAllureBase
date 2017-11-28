@@ -33,26 +33,25 @@ namespace NUnitAllure
             catch (Exception e)
             {
                 stepException = e;
+                throw;
             }
-
-            string stepLog = TestExecutionContext.CurrentContext.CurrentResult.Output.Remove(0, logLength);
-            AddStepLog(uuid, stepLog);
-
-            Allure.UpdateStep(uuid, x =>
+            finally
             {
-                x.status = GetStatusFromException(stepException);
-                x.statusDetails = new StatusDetails
-                {
-                    message = stepException?.Message,
-                    trace = stepException?.StackTrace
-                };
-                x.attachments.AddRange(AllureHelper.GetAttaches());
-            });
-            Allure.StopStep(uuid);
-            //steps.TryRemove(caseId, out uuid);
+                string stepLog = TestExecutionContext.CurrentContext.CurrentResult.Output.Remove(0, logLength);
+                AddStepLog(uuid, stepLog);
 
-            if (stepException != null)
-                throw stepException;
+                Allure.UpdateStep(uuid, x =>
+                {
+                    x.status = GetStatusFromException(stepException);
+                    x.statusDetails = new StatusDetails
+                    {
+                        message = stepException?.Message,
+                        trace = stepException?.StackTrace
+                    };
+                    x.attachments.AddRange(AllureHelper.GetAttaches());
+                });
+                Allure.StopStep(uuid);
+            }
         }
 
         private void AddStepLog(string uuid, string log)
